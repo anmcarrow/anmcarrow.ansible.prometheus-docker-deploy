@@ -9,12 +9,13 @@
   unarchive:
     src: "{{ deployment_archive_url }}"
     dest: "{{ install_prefix }}"
+    remote_src: yes
 
 - name: Link unpacked Node Exporter to execution path
   file:
     state: link
     src: "{{ install_prefix }}/node_exporter-{{ software_version }}.linux-amd64/node_exporter"
-    dest: /usr/local/bin
+    dest: /usr/local/bin/node_exporter
 
 - name: Deploy Node Exporter systemd service template
   template:
@@ -30,5 +31,5 @@
 
 - name: Test Node Exporter service port
   wait_for:
-    port: 9091
+    port: 9100
     delay: 10
