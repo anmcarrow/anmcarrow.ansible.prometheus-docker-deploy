@@ -32,4 +32,4 @@
 - name: Test Node Exporter service port
   wait_for:
     port: 9100
-    delay: 10
+  tags: test
