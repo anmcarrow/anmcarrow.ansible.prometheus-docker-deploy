@@ -1,35 +1,18 @@
+
 ---
 
-- name: "Create {{ install_prefix }} directory"
-  file:
-    state: directory
-    path: "{{ install_prefix }}"
+- name: Import deploy tasks for Ubuntu 14.04
+  import_tasks: ubuntu-trusty-deploy.yml
+  when:
+    - ansible_distribution == "Ubuntu"
+    - ansible_distribution_version == "14.04"
 
-- name: Unpack Node Exporter deployment archive
-  unarchive:
-    src: "{{ deployment_archive_url }}"
-    dest: "{{ install_prefix }}"
-    remote_src: yes
+- name: Import standard deploy tasks
+  import_tasks: standard-deploy.yml
+  when:
+    - ansible_distribution != "Ubuntu"
+    - ansible_distribution_version != "14.04"
 
-- name: Link unpacked Node Exporter to execution path
-  file:
-    state: link
-    src: "{{ install_prefix }}/node_exporter-{{ software_version }}.linux-amd64/node_exporter"
-    dest: /usr/local/bin/node_exporter
-
-- name: Deploy Node Exporter systemd service template
-  template:
-    src: node-exporter.service.j2
-    dest: /etc/systemd/system/node-exporter.service
-
-- name: Activate and start Node Exporter systemd service
-  systemd:
-    name: node-exporter
-    enabled: true
-    state: started
-    daemon_reload: yes
-
-- name: Test Node Exporter service port
-  wait_for:
-    port: 9100
+- name: Import service-testing tasks
+  import_tasks: service-tests.yml
   tags: test
