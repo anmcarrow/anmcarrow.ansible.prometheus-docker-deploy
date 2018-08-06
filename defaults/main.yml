@@ -11,5 +11,8 @@
       - prometheus
       - grafana
 
+    grafana_user: admin
+    grafana_password: admin
+
     volumes_prefix_prometheus: "{{ project_basedir }}/prometheus"
     volumes_prefix_grafana: "{{ project_basedir }}/grafana"

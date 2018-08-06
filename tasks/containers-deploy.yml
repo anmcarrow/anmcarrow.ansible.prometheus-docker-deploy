@@ -19,6 +19,7 @@
   with_items:
     - "{{ install_prefix }}/prometheus"
     - "{{ install_prefix }}/prometheus/conf"
+    - "{{ install_prefix }}/prometheus/conf/dynamic"
     - "{{ install_prefix }}/prometheus/data"
   tags: prometheus,mkdir
 
@@ -31,7 +32,7 @@
 
 - name: "Run the Prometheus container"
   docker_container:
-    name: pometheus
+    name: prometheus
     hostname: "{{ ansible_hostname }}"
     state: started
     pull: yes
@@ -86,6 +87,8 @@
           - nodeexporter
     exposed_ports:
       - 9100
+    published_ports:
+      - 9100:9100
   tags: nodeexporter,run
 
 
@@ -99,6 +102,7 @@
     - "{{ install_prefix }}/grafana/datasources"
     - "{{ install_prefix }}/grafana/dashboards"
     - "{{ install_prefix }}/grafana/scripts"
+    - "{{ install_prefix }}/grafana/conf"
   tags: grafana,mkdir
 
 - name: "Deploy dashboards template for Grafana container"
@@ -112,6 +116,13 @@
   copy:
     src: "{{ role_path }}/files/grafana/dashboards/node-stat.json"
     dest: "{{ install_prefix }}/grafana/datasources/prometheus.json"
+    mode: 0666
+  tags: grafana,template
+
+- name: "Deploy main configuration template for Grafana container"
+  copy:
+    src: "{{ role_path }}/files/grafana/grafana.ini"
+    dest: "{{ install_prefix }}/grafana/conf/grafana.ini"
     mode: 0666
   tags: grafana,template
 
@@ -138,8 +149,8 @@
       - "{{ install_prefix }}/grafana/scripts/setup.sh:/setup.sh"
     entrypoint: "/setup.sh"
     env:
-      GF_SECURITY_ADMIN_USER: ${ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_USER: "{{ grafana_user }}"
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_password }}"
       GF_USERS_ALLOW_SIGN_UP: false
     network_mode: bridge
     networks:
