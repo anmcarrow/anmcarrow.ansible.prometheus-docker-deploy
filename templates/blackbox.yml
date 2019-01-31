@@ -1,0 +1,13 @@
+modules:
+  icmp:
+    prober: icmp
+    timeout: 5s
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+  http_post_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      method: POST
