@@ -1,3 +1,4 @@
+
 global:
   scrape_interval:     5s
   evaluation_interval: 5s
@@ -13,23 +14,58 @@ rule_files:
 
 # A scrape configuration containing exactly one endpoint to scrape.
 scrape_configs:
-  - job_name: 'nodeexporter'
-    scrape_interval: 5s
-    static_configs:
-      - targets: ['nodeexporter:9100']
-
   - job_name: 'prometheus'
     scrape_interval: 10s
     static_configs:
       - targets: ['localhost:9090']
-
-#  - job_name: 'ansible-hosts'
-#    scrape_interval: 10s
-#    file_sd_configs:
-#      - names: ['/etc/prometheus/dynamic/*.yml']
 
   - job_name: 'dynamic-hosts'
     scrape_interval: 10s
     file_sd_configs:
       - files:
           - /etc/prometheus/dynamic/*.yml
+
+  - job_name: 'iape_openstack'
+    openstack_sd_configs:
+      - identity_endpoint: http://mpt-cluster.iot.iskrauraltel.ru:5000/v2.0
+        username: admin
+        password: admin
+        role: instance
+        project_name: mpt-prod
+        region: nova
+    relabel_configs:
+      # Keep only active instances
+      - source_labels: [__meta_openstack_instance_status]
+        action: keep
+        regex: ACTIVE
+      # Keep only instances which are flagged for scraping
+      - source_labels: [__meta_openstack_tag_prometheus_io_scrape]
+        action: keep
+        regex: 'true'
+      # Update the scraping port if required
+      - source_labels: [__address__, __meta_openstack_tag_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      # Replace the default instance by the OpenStack instance name
+      - source_labels: [__meta_openstack_instance_name]
+        target_label: instance
+
+
+  - job_name: 'blackbox'
+#    metrics_path: /probe
+    params:
+      module:
+        - http_200_module
+        - icmp
+    static_configs:
+      - targets:
+        - https://rzd.iot.iskrauraltel.ru
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: {{ ansible_default_ipv4.address }}:{{ blackbox_port }}

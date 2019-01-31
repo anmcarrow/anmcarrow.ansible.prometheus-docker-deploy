@@ -16,3 +16,7 @@
 - name: Import service-testing tasks
   import_tasks: service-tests.yml
   tags: test
+
+- name: Import containers-deploy tasks
+  import_tasks: containers-deploy.yml
+  tags: container

@@ -28,27 +28,3 @@
     enabled: true
     daemon_reload: yes
     state: started
-#blackbox
-- name: Unpack BlackBox Exporter deployment archive
-  unarchive:
-    src: "{{ deployment_archive_url_bl }}"
-    dest: "{{ install_prefix }}"
-    remote_src: yes
-
-- name: Link unpacked BlackBox Exporter to execution path
-  file:
-    state: link
-    src: "{{ install_prefix }}/blackbox_exporter-{{ software_version_bl }}.linux-amd64/blackbox_exporter"
-    dest: /usr/local/bin/blackbox_exporter
-
-- name: Deploy BlackBox Exporter systemd service template
-  template:
-    src: blackbox-exporter.service.j2
-    dest: /etc/systemd/system/blackbox-exporter.service
-
-- name: Activate and start BlackBox Exporter systemd service
-  systemd:
-    name: blackbox-exporter
-    enabled: true
-    daemon_reload: yes
-    state: started
